@@ -2,7 +2,20 @@ open Core
 
 (* You need to modify this function to blur the input image
    based on the provided radius instead of ignoring it. *)
-let transform image ~radius:_ = image
+
+let better_slice ~image ~x ~y radius =
+  Image.slice
+    image
+    ~x_start:(max (x - radius) 0)
+    ~x_end:(min (x + radius) (Image.width image))
+    ~y_start:(max (y - radius) 0)
+    ~y_end:(min (y + radius) (Image.height image))
+;;
+
+let transform image ~radius =
+  Image.mapi (Image.copy image) ~f:(fun ~x ~y _ ->
+    Image.mean_pixel (better_slice ~image ~x ~y radius))
+;;
 
 let command =
   Command.basic
@@ -24,5 +37,6 @@ let command =
         let image' = transform image ~radius in
         Image.save_ppm
           image'
-          ~filename:(String.chop_suffix_exn filename ~suffix:".ppm" ^ "_blur.ppm")]
+          ~filename:
+            (String.chop_suffix_exn filename ~suffix:".ppm" ^ "_blur.ppm")]
 ;;
