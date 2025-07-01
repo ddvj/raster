@@ -27,3 +27,18 @@ let command =
           ~filename:
             (String.chop_suffix_exn filename ~suffix:".ppm" ^ "_gray.ppm")]
 ;;
+
+let%expect_test "grayscale test" =
+  let reference =
+    Image.load_ppm ~filename:"../images/reference-beach_portrait_gray.ppm"
+  in
+  let generated =
+    transform (Image.load_ppm ~filename:"../images/beach_portrait.ppm")
+  in
+  let result =
+    Image.foldi generated ~init:true ~f:(fun ~x ~y state pixel ->
+      state && Pixel.equal pixel (Image.get reference ~x ~y))
+  in
+  print_endline (Bool.to_string result);
+  [%expect {|true|}]
+;;

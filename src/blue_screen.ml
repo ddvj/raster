@@ -38,3 +38,20 @@ let command =
             (String.chop_suffix_exn foreground_file ~suffix:".ppm"
              ^ "_vfx.ppm")]
 ;;
+
+let%expect_test "blue screen test" =
+  let reference =
+    Image.load_ppm ~filename:"../images/reference-oz_bluescreen_vfx.ppm"
+  in
+  let generated =
+    transform
+      ~foreground:(Image.load_ppm ~filename:"../images/oz_bluescreen.ppm")
+      ~background:(Image.load_ppm ~filename:"../images/meadow.ppm")
+  in
+  let result =
+    Image.foldi generated ~init:true ~f:(fun ~x ~y state pixel ->
+      state && Pixel.equal pixel (Image.get reference ~x ~y))
+  in
+  print_endline (Bool.to_string result);
+  [%expect {|true|}]
+;;

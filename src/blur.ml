@@ -7,9 +7,9 @@ let better_slice ~image ~x ~y radius =
   Image.slice
     image
     ~x_start:(max (x - radius) 0)
-    ~x_end:(min (x + radius) (Image.width image))
+    ~x_end:(min (x + radius) (Image.width image - 1))
     ~y_start:(max (y - radius) 0)
-    ~y_end:(min (y + radius) (Image.height image))
+    ~y_end:(min (y + radius) (Image.height image - 1))
 ;;
 
 let transform image ~radius =
@@ -39,4 +39,29 @@ let command =
           image'
           ~filename:
             (String.chop_suffix_exn filename ~suffix:".ppm" ^ "_blur.ppm")]
+;;
+
+let%expect_test "blur test" =
+  let reference =
+    Image.load_ppm ~filename:"../images/reference-beach_portrait_blur.ppm"
+  in
+  let generated =
+    transform
+      (Image.load_ppm ~filename:"../images/beach_portrait.ppm")
+      ~radius:3
+  in
+  let result =
+    Image.foldi generated ~init:true ~f:(fun ~x ~y state pixel ->
+      if state && not (Pixel.equal pixel (Image.get reference ~x ~y))
+      then (
+        print_endline
+          ("first error: expected "
+           ^ Pixel.to_string (Image.get reference ~x ~y)
+           ^ " got "
+           ^ Pixel.to_string pixel);
+        false)
+      else state)
+  in
+  print_endline (Bool.to_string result);
+  [%expect {|true|}]
 ;;
