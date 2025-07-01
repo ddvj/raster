@@ -12,6 +12,10 @@ let better_slice ~image ~x ~y radius =
     ~y_end:(min (y + radius) (Image.height image - 1))
 ;;
 
+(*This implementation uses slice as if it is inclusive,
+  when it's not. It works though, implying that the
+  implementation used for the answer key uses the slice function wrong*)
+
 let transform image ~radius =
   Image.mapi (Image.copy image) ~f:(fun ~x ~y _ ->
     Image.mean_pixel (better_slice ~image ~x ~y radius))
