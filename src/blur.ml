@@ -55,17 +55,20 @@ let%expect_test "blur test" =
       ~radius:3
   in
   let result =
-    Image.foldi generated ~init:true ~f:(fun ~x ~y state pixel ->
-      if state && not (Pixel.equal pixel (Image.get reference ~x ~y))
-      then (
-        print_endline
-          ("first error: expected "
-           ^ Pixel.to_string (Image.get reference ~x ~y)
-           ^ " got "
-           ^ Pixel.to_string pixel);
-        false)
-      else state)
+    Image.foldi generated ~init:`No_errors ~f:(fun ~x ~y state pixel ->
+      match state with
+      | `No_errors ->
+        if not (Pixel.equal pixel (Image.get reference ~x ~y))
+        then (
+          print_endline
+            ("first error: expected "
+             ^ Pixel.to_string (Image.get reference ~x ~y)
+             ^ " got "
+             ^ Pixel.to_string pixel);
+          `Has_erred)
+        else `No_errors
+      | `Has_erred -> `Has_erred)
   in
-  print_endline (Bool.to_string result);
+  print_s [%sexp (result : [ `Has_erred | `No_errors ])];
   [%expect {|true|}]
 ;;
