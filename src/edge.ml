@@ -24,11 +24,15 @@ let magnitude x y image =
   (gx * gx) + (gy * gy) |> float_of_int |> Float.sqrt
 ;;
 
-let transform image ~threshold =
-  let gray = Grayscale.transform image in
+let transform image ~threshold ~blur =
+  let blurred =
+    match blur with 0 -> image | _ -> Blur.transform image ~radius:blur
+  in
+  let gray = Grayscale.transform blurred in
   let width = Image.width image in
   let height = Image.height image in
   let max = Image.max_val image in
+  let float_threshold = float_of_int threshold *. 0.01 *. float_of_int max in
   let bordered =
     Image.mapi
       (Image.make
@@ -48,7 +52,7 @@ let transform image ~threshold =
       && y > 0
       && y < Image.height bordered - 1
     then
-      if Float.( >. ) (magnitude x y bordered) threshold
+      if Float.( >. ) (magnitude x y bordered) float_threshold
       then max, max, max
       else Pixel.zero
     else pixel)
@@ -66,13 +70,18 @@ let command =
       and threshold =
         flag
           "threshold"
-          (required Command.Param.float)
+          (required Command.Param.int)
           ~doc:
             "N the magnitude to use as a threshold for detecting edges \
              (lower = more sensitive/more random edges)"
+      and blur =
+        flag
+          "blur"
+          (required Command.Param.int)
+          ~doc:"radius of any blur for preprocessing"
       in
       fun () ->
-        let image = Image.load_ppm ~filename |> transform ~threshold in
+        let image = Image.load_ppm ~filename |> transform ~threshold ~blur in
         Image.save_ppm
           image
           ~filename:
