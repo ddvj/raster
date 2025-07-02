@@ -70,5 +70,5 @@ let%expect_test "blur test" =
       | `Has_erred -> `Has_erred)
   in
   print_s [%sexp (result : [ `Has_erred | `No_errors ])];
-  [%expect {|true|}]
+  [%expect {|No_errors|}]
 ;;

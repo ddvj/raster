@@ -8,5 +8,6 @@ let command =
     ; "blur", Blur.command
     ; "dither", Dither.command
     ; "edge", Edge.command
+    ; "colordither", Color_dither.command
     ]
 ;;
